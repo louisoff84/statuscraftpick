@@ -1,0 +1,23 @@
+[Unit]
+Description=Craftpick Status
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=craftpick
+Group=craftpick
+WorkingDirectory=/opt/craftpick-status
+EnvironmentFile=/etc/craftpick-status.env
+ExecStart=/usr/bin/node /opt/craftpick-status/dist/server.js
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/craftpick-status
+Environment=DATA_FILE=/var/lib/craftpick-status/data.json
+
+[Install]
+WantedBy=multi-user.target

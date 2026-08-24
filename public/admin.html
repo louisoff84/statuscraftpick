@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="red">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Craftpick • Command Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root[data-theme="red"] { --accent: #ff3344; --accent-hover: #ff4757; --border-focus: rgba(255, 51, 68, 0.4); }
+    :root[data-theme="cyan"] { --accent: #00f0ff; --accent-hover: #33f3ff; --border-focus: rgba(0, 240, 255, 0.4); }
+    :root[data-theme="green"] { --accent: #00ff88; --accent-hover: #33ff9f; --border-focus: rgba(0, 255, 136, 0.4); }
+    :root[data-theme="purple"] { --accent: #9d4edd; --accent-hover: #b065e8; --border-focus: rgba(157, 78, 221, 0.4); }
+
+    :root {
+      --bg: #030508;
+      --panel: rgba(12, 16, 24, 0.75);
+      --border: rgba(255, 255, 255, 0.06);
+      --maint: #ffa100;
+      --text: #f1f5f9;
+      --text-sub: #64748b;
+    }
+
+    * { box-sizing: border-box; font-family: 'Inter', sans-serif; cursor: none; }
+    body { background-color: var(--bg); color: var(--text); padding: 50px 20px; margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; transition: 0.3s; }
+
+    #cursor-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; position: fixed; z-index: 9999; pointer-events: none; transform: translate(-50%, -50%); box-shadow: 0 0 10px var(--accent); transition: background 0.3s; }
+
+    .container { width: 100%; max-width: 900px; z-index: 1; }
+    h1 { color: var(--text); font-size: 2.2rem; font-weight: 900; text-transform: uppercase; letter-spacing: -1px; margin-bottom: 30px; border-bottom: 1px solid var(--border); padding-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+    h1 span { color: var(--accent); transition: color 0.3s; }
+
+    #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 65vh; width: 100%; }
+    .login-box { background: var(--panel); border: 1px solid var(--border); padding: 45px 35px; border-radius: 18px; width: 100%; max-width: 420px; text-align: center; backdrop-filter: blur(20px); box-shadow: 0 25px 50px rgba(0,0,0,0.8); }
+    .login-box h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 8px; text-transform: uppercase; background: linear-gradient(135deg, #fff 30%, var(--accent) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .login-box p { color: var(--text-sub); font-size: 0.82rem; margin-bottom: 25px; }
+    
+    input, select { width: 100%; padding: 14px 16px; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border); color: #fff; border-radius: 10px; font-size: 0.95rem; font-family: 'Inter', sans-serif; transition: 0.2s; outline: none; }
+    input:focus, select:focus { border-color: var(--border-focus); box-shadow: 0 0 15px rgba(255, 51, 68, 0.15); }
+    
+    .login-box input { text-align: center; font-family: 'JetBrains Mono', monospace; letter-spacing: 2px; margin-bottom: 20px; }
+
+    button { background: var(--accent); color: #fff; border: none; padding: 13px 22px; border-radius: 10px; font-weight: 700; font-size: 0.9rem; transition: all 0.2s; white-space: nowrap; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+    button:hover { background: var(--accent-hover); transform: translateY(-2px); }
+    button.btn-warn { background: var(--maint); color: #000; }
+    button.btn-danger { background: transparent; border: 1px solid rgba(255, 31, 61, 0.4); color: #ff1f3d; }
+    button.btn-danger:hover { background: rgba(255, 31, 61, 0.1); }
+    button.btn-secondary { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); }
+    button.btn-secondary:hover { background: rgba(255, 255, 255, 0.1); }
+
+    #admin-panel { display: none; width: 100%; }
+
+    .config-card { background: var(--panel); border: 1px solid var(--border); padding: 22px; border-radius: 14px; margin-bottom: 30px; backdrop-filter: blur(20px); display: flex; flex-direction: column; gap: 15px; }
+    .config-row { display: flex; gap: 12px; align-items: center; }
+    .config-row input { flex: 1; }
+
+    .form-group { display: grid; grid-template-columns: 1.2fr 1fr 1.5fr 110px auto; gap: 12px; background: var(--panel); padding: 22px; border-radius: 14px; border: 1px solid var(--border); margin-bottom: 35px; backdrop-filter: blur(20px); align-items: center; }
+
+    .card { background: var(--panel); border: 1px solid var(--border); padding: 20px 24px; border-radius: 14px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(20px); transition: 0.2s; }
+    .card:hover { border-color: rgba(255,255,255,0.12); }
+    .actions { display: flex; gap: 10px; }
+
+    .service-meta { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--text-sub); margin-top: 4px; }
+    .service-title { font-weight: 700; font-size: 1.05rem; }
+    .service-title span { font-size: 0.75rem; color: var(--text-sub); text-transform: uppercase; margin-left: 6px; }
+    .card.is-maintenance { border-color: rgba(255,161,0,0.4); background: rgba(255,161,0,0.03); }
+    @media (pointer: coarse) { * { cursor: auto; } #cursor-dot { display: none; } }
+    @media (max-width: 760px) {
+      body { padding: 24px 14px; }
+      .form-group { grid-template-columns: 1fr; }
+      .config-row, .card, .actions { align-items: stretch; flex-direction: column; }
+      .actions button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="cursor-dot"></div>
+
+  <div class="container">
+    
+    <div id="login-screen">
+      <div class="login-box">
+        <h2>Craftpick</h2>
+        <p>Console d'Administration Sécurisée</p>
+        <input type="password" id="pwdInput" placeholder="••••••••••••" autocomplete="current-password">
+        <button id="loginButton" style="width: 100%;">Connexion au Panel</button>
+      </div>
+    </div>
+
+    <div id="admin-panel">
+      <h1>
+        <div>Command <span>Center</span></div>
+        <button id="logoutButton" class="btn-secondary">Déconnexion</button>
+      </h1>
+      
+      <div class="config-card">
+        <div class="config-row">
+          <input type="text" id="webhook" placeholder="URL Webhook Discord pour les alertes de maintenance...">
+          <button id="saveConfigButton">Sauvegarder</button>
+        </div>
+        <div class="config-row" style="justify-content: space-between;">
+          <span style="font-size: 0.85rem; color: var(--text-sub); font-weight: 600; text-transform: uppercase;">Thème Visuel Global :</span>
+          <select id="themeSelect" style="max-width: 280px;">
+            <option value="red">Rouge Craftpick</option>
+            <option value="cyan">Cyan Cyber</option>
+            <option value="green">Vert Matrix</option>
+            <option value="purple">Violet Plasma</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <input type="text" id="sName" placeholder="Nom du service...">
+        <select id="sType">
+          <option value="http">HTTP / HTTPS</option>
+          <option value="tcp">Port TCP</option>
+        </select>
+        <input type="text" id="sTarget" placeholder="URL ou IP cible...">
+        <input type="number" id="sPort" placeholder="Port">
+        <button id="addServiceButton">+ Ajouter</button>
+      </div>
+
+      <div id="adminGrid"></div>
+    </div>
+
+  </div>
+
+  <script type="text/plain" data-legacy-script>
+    const dot = document.getElementById('cursor-dot');
+    window.addEventListener('mousemove', e => { dot.style.left = e.clientX+'px'; dot.style.top = e.clientY+'px'; });
+
+    let authToken = sessionStorage.getItem('craftpick_token') || null;
+
+    if (authToken) verifyToken(authToken);
+
+    async function tryLogin() {
+      verifyToken(document.getElementById('pwdInput').value);
+    }
+
+    async function verifyToken(token) {
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Authorization': token }
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          authToken = token;
+          sessionStorage.setItem('craftpick_token', token);
+          
+          document.getElementById('webhook').value = data.webhookUrl || '';
+          if(data.theme) {
+            document.getElementById('themeSelect').value = data.theme;
+            document.documentElement.setAttribute('data-theme', data.theme);
+          }
+          
+          document.getElementById('login-screen').style.display = 'none';
+          document.getElementById('admin-panel').style.display = 'block';
+          
+          loadAdmin();
+          setInterval(loadAdmin, 10000);
+        } else {
+          alert("Mot de passe incorrect.");
+          logout();
+        }
+      } catch (err) { console.error(err); }
+    }
+
+    function logout() {
+      sessionStorage.removeItem('craftpick_token');
+      location.reload();
+    }
+
+    const api = async (url, method, body) => {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json', 'Authorization': authToken },
+        body: body ? JSON.stringify(body) : null
+      });
+      if(res.status === 401) { alert("Session expirée."); logout(); return false; }
+      return res.ok;
+    };
+
+    async function loadAdmin() {
+      if(!authToken) return;
+      const res = await fetch('/api/status');
+      const data = await res.json();
+      document.getElementById('adminGrid').innerHTML = data.map(s => `
+        <div class="card" style="${s.maintenance ? 'border-color: rgba(255,161,0,0.4); background: rgba(255,161,0,0.03);' : ''}">
+          <div>
+            <div style="font-weight: 700; font-size: 1.05rem;">${s.name} <span style="font-size:0.75rem; color:var(--text-sub); text-transform:uppercase; margin-left:6px;">[${s.type}]</span></div>
+            <div class="service-meta">${s.type === 'http' ? s.target : s.host + ':' + s.port}</div>
+          </div>
+          <div class="actions">
+            <button class="btn-warn" onclick="toggleMaint('${s.id}')">${s.maintenance ? 'Couper Maint.' : 'Maint. On'}</button>
+            <button class="btn-secondary" onclick="resetStats('${s.id}')">Reset Historique</button>
+            <button class="btn-danger" onclick="delService('${s.id}')">Supprimer</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function saveConfig() {
+      const themeVal = document.getElementById('themeSelect').value;
+      document.documentElement.setAttribute('data-theme', themeVal);
+      
+      const success = await api('/api/admin/config', 'POST', { 
+        webhookUrl: document.getElementById('webhook').value,
+        theme: themeVal
+      });
+      if(success) {
+        // Optionnel : notification discrète ou simple log
+      }
+    }
+
+    async function addService() {
+      const type = document.getElementById('sType').value;
+      const target = document.getElementById('sTarget').value;
+      const data = { name: document.getElementById('sName').value, type };
+      if(type === 'http') data.target = target;
+      else { data.host = target; data.port = document.getElementById('sPort').value; }
+      
+      if(await api('/api/admin/service', 'POST', data)) {
+        document.getElementById('sName').value = document.getElementById('sTarget').value = document.getElementById('sPort').value = '';
+        loadAdmin();
+      }
+    }
+
+    async function toggleMaint(id) { if(await api('/api/admin/maintenance/'+id, 'POST')) loadAdmin(); }
+    async function resetStats(id) { if(confirm("Vider l'historique des pings de ce service ?") && await api('/api/admin/reset/'+id, 'POST')) loadAdmin(); }
+    async function delService(id) { if(confirm("Supprimer ce service de la surveillance ?") && await api('/api/admin/service/'+id, 'DELETE')) loadAdmin(); }
+  </script>
+  <script type="module" src="/assets/admin.js"></script>
+</body>
+</html>
