@@ -1,0 +1,20 @@
+{
+  "webhookUrl": "",
+  "services": [
+    {
+      "id": "1",
+      "name": "Site Web principal",
+      "type": "http",
+      "target": "https://craftpick.fr",
+      "maintenance": false
+    },
+    {
+      "id": "2",
+      "name": "Panel Pterodactyl",
+      "type": "http",
+      "target": "https://panel.craftpick.fr",
+      "maintenance": false
+    }
+  ],
+  "theme": "purple"
+}

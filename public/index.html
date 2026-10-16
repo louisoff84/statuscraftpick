@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="red">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Craftpick • System Status</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root[data-theme="red"] { --accent: #ff3344; --accent-glow: rgba(255, 51, 68, 0.25); --border-hover: rgba(255, 51, 68, 0.4); }
+    :root[data-theme="cyan"] { --accent: #00f0ff; --accent-glow: rgba(0, 240, 255, 0.25); --border-hover: rgba(0, 240, 255, 0.4); }
+    :root[data-theme="green"] { --accent: #00ff88; --accent-glow: rgba(0, 255, 136, 0.25); --border-hover: rgba(0, 255, 136, 0.4); }
+    :root[data-theme="purple"] { --accent: #9d4edd; --accent-glow: rgba(157, 78, 221, 0.25); --border-hover: rgba(157, 78, 221, 0.4); }
+
+    :root {
+      --bg: #030508;
+      --card-bg: rgba(12, 16, 24, 0.65);
+      --card-hover: rgba(18, 24, 38, 0.85);
+      --border: rgba(255, 255, 255, 0.06);
+      --online: #00ff88;
+      --offline: #ff1f3d;
+      --maint: #ffa100;
+      --text: #f1f5f9;
+      --text-sub: #64748b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; cursor: none; }
+    
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 60px 20px;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 50% 0%, var(--accent-glow) 0%, transparent 50%),
+        linear-gradient(to right, rgba(255,255,255,0.01) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.01) 1px, transparent 1px);
+      background-size: 100% 100%, 40px 40px, 40px 40px;
+      transition: background-image 0.3s ease;
+    }
+
+    #cursor-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; position: fixed; z-index: 9999; pointer-events: none; transform: translate(-50%, -50%); box-shadow: 0 0 12px var(--accent); transition: transform 0.1s ease, background 0.3s; }
+    #cursor-ring { width: 34px; height: 34px; border: 1px solid var(--accent); opacity: 0.4; border-radius: 50%; position: fixed; z-index: 9998; pointer-events: none; transform: translate(-50%, -50%); transition: width 0.2s, height 0.2s, border-color 0.3s; }
+
+    .ambient-glow { position: fixed; width: 500px; height: 500px; background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%); top: -100px; left: 50%; transform: translateX(-50%); filter: blur(100px); z-index: -1; pointer-events: none; transition: background 0.3s; }
+
+    .container { max-width: 820px; margin: 0 auto; z-index: 1; }
+
+    header { text-align: center; margin-bottom: 45px; }
+    .brand { font-size: 3rem; font-weight: 900; text-transform: uppercase; letter-spacing: -1.5px; background: linear-gradient(135deg, #ffffff 30%, var(--accent) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 30px var(--accent-glow)); transition: 0.3s; }
+    .subtitle { color: var(--text-sub); letter-spacing: 4px; font-size: 0.75rem; text-transform: uppercase; margin-top: 8px; font-weight: 600; }
+
+    .grid { display: flex; flex-direction: column; gap: 18px; }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-radius: 16px;
+      padding: 24px;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      background: var(--card-hover);
+      border-color: var(--border-hover);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7), 0 0 25px var(--accent-glow);
+      transform: translateY(-2px);
+    }
+
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+    .service-name { font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 14px; letter-spacing: -0.3px; }
+
+    .dot { width: 10px; height: 10px; border-radius: 50%; position: relative; }
+    .dot::after { content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 1.5px solid currentColor; opacity: 0; animation: pingRing 2s cubic-bezier(0, 0, 0.2, 1) infinite; }
+    
+    .status-online { color: var(--online); }
+    .status-online .dot { background: var(--online); box-shadow: 0 0 12px var(--online); }
+    .status-online .dot::after { border-color: var(--online); }
+
+    .status-offline { color: var(--offline); }
+    .status-offline .dot { background: var(--offline); box-shadow: 0 0 12px var(--offline); }
+    .status-offline .dot::after { border-color: var(--offline); opacity: 1; }
+
+    .status-maint { color: var(--maint); }
+    .status-maint .dot { background: var(--maint); box-shadow: 0 0 12px var(--maint); }
+
+    @keyframes pingRing {
+      0% { transform: scale(1); opacity: 0.8; }
+      100% { transform: scale(2.6); opacity: 0; }
+    }
+
+    .badge {
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 0.82rem;
+      border: 1px solid currentColor;
+      background: rgba(0, 0, 0, 0.35);
+      letter-spacing: -0.5px;
+    }
+
+    .history-bars { display: flex; gap: 5px; height: 32px; align-items: flex-end; padding: 2px 0; }
+    .bar { flex: 1; border-radius: 4px; transition: transform 0.2s, background-color 0.2s; min-height: 4px; }
+    .bar.online { background: var(--online); height: 100%; opacity: 0.65; }
+    .bar.offline { background: var(--offline); height: 100%; opacity: 0.9; }
+    .bar.empty { background: rgba(255, 255, 255, 0.04); height: 100%; }
+    .bar:hover { transform: scaleY(1.25); opacity: 1; filter: brightness(1.2); }
+
+    .card-footer-info { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-size: 0.75rem; color: var(--text-sub); font-weight: 500; }
+    .click-hint { color: var(--accent); font-weight: 600; opacity: 0.85; transition: opacity 0.2s; }
+    .card:hover .click-hint { opacity: 1; }
+
+    .details { max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease; opacity: 0; }
+    .card.expanded .details { max-height: 420px; opacity: 1; margin-top: 22px; border-top: 1px solid var(--border); padding-top: 22px; }
+
+    .stats { display: flex; gap: 15px; margin-bottom: 20px; }
+    .stat-box { flex: 1; background: rgba(0, 0, 0, 0.3); padding: 14px 18px; border-radius: 12px; border: 1px solid var(--border); }
+    .stat-label { font-size: 0.7rem; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; font-weight: 600; }
+    .stat-val { font-size: 1.25rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+
+    canvas { width: 100%; height: 130px; background: rgba(0, 0, 0, 0.4); border-radius: 12px; border: 1px solid var(--border); display: block; }
+    
+    .maint-banner { background: rgba(255, 161, 0, 0.08); border: 1px solid rgba(255, 161, 0, 0.3); color: var(--maint); padding: 18px; text-align: center; border-radius: 12px; font-weight: 700; font-size: 0.9rem; letter-spacing: 0.5px; }
+
+    footer { margin-top: 50px; text-align: center; font-size: 0.75rem; color: var(--text-sub); letter-spacing: 1px; text-transform: uppercase; font-weight: 500; }
+    .maintenance-bar { background: rgba(255,161,0,0.15) !important; }
+    @media (pointer: coarse) { * { cursor: auto; } #cursor-dot, #cursor-ring { display: none; } }
+    @media (max-width: 600px) {
+      body { padding: 36px 14px; }
+      .brand { font-size: 2.3rem; }
+      .card { padding: 18px; }
+      .stats { flex-direction: column; }
+      .click-hint { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+  <div class="ambient-glow"></div>
+
+  <div class="container">
+    <header>
+      <h1 class="brand">Craftpick</h1>
+      <p class="subtitle">System Analytics & Monitoring</p>
+    </header>
+    <div class="grid" id="grid"></div>
+    <footer>Craftpick Engine &bull; Tous systèmes opérationnels</footer>
+  </div>
+
+  <script type="text/plain" data-legacy-script>
+    async function syncTheme() {
+      try {
+        const res = await fetch('/api/config');
+        const data = await res.json();
+        if(data.theme) document.documentElement.setAttribute('data-theme', data.theme);
+      } catch(e) {}
+    }
+    syncTheme();
+    setInterval(syncTheme, 10000);
+
+    const dot = document.getElementById('cursor-dot'), ring = document.getElementById('cursor-ring');
+    let mx = 0, my = 0, rx = 0, ry = 0;
+    window.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; dot.style.left = mx+'px'; dot.style.top = my+'px'; });
+    function loop() { rx += (mx - rx)*0.2; ry += (my - ry)*0.2; ring.style.left = rx+'px'; ring.style.top = ry+'px'; requestAnimationFrame(loop); }
+    loop();
+
+    const expanded = new Set();
+    window.toggleCard = (id) => { expanded.has(id) ? expanded.delete(id) : expanded.add(id); fetchStatus(); };
+
+    function drawGraph(id, data) {
+      const c = document.getElementById('cvs-'+id);
+      if(!c || !data.length) return;
+      const ctx = c.getContext('2d'), w = c.width = c.offsetWidth, h = c.height = c.offsetHeight;
+      ctx.clearRect(0,0,w,h);
+      const maxP = Math.max(...data.map(d=>d.ping), 15);
+      
+      ctx.strokeStyle = 'rgba(255,255,255,0.02)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, h/2); ctx.lineTo(w, h/2);
+      ctx.stroke();
+
+      const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+
+      ctx.beginPath();
+      ctx.strokeStyle = accentColor;
+      ctx.lineWidth = 2.5;
+      data.forEach((pt, i) => {
+        const x = i * (w / (data.length - 1 || 1)), y = h - (pt.ping / maxP) * (h - 25) - 12;
+        i===0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      ctx.lineTo(w, h); ctx.lineTo(0, h);
+      const grd = ctx.createLinearGradient(0,0,0,h);
+      const glowRgba = getComputedStyle(document.documentElement).getPropertyValue('--accent-glow').trim();
+      grd.addColorStop(0, glowRgba); grd.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = grd; ctx.fill();
+    }
+
+    async function fetchStatus() {
+      try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        document.getElementById('grid').innerHTML = data.map(s => {
+          const isExp = expanded.has(s.id);
+          const stateClass = s.maintenance ? 'status-maint' : (s.online ? 'status-online' : 'status-offline');
+          const badgeTxt = s.maintenance ? 'MAINTENANCE' : (s.online ? `${s.ping} ms` : 'DOWN');
+          
+          const bars = Array.from({length: 30}).map((_, i) => {
+            const check = s.history[s.history.length - 30 + i];
+            if(s.maintenance) return `<div class="bar empty" style="background: rgba(255,161,0,0.15)"></div>`;
+            if(!check) return `<div class="bar empty"></div>`;
+            return `<div class="bar ${check.online ? 'online' : 'offline'}" title="${check.ping}ms"></div>`;
+          }).join('');
+
+          return `
+            <div class="card ${isExp ? 'expanded' : ''}" onclick="toggleCard('${s.id}')">
+              <div class="card-header">
+                <div class="service-name">
+                  <div class="dot"></div> ${s.name}
+                </div>
+                <div class="badge ${stateClass}">${badgeTxt}</div>
+              </div>
+              <div class="history-bars">${bars}</div>
+              <div class="card-footer-info">
+                <span>Historique récent (30 sondages)</span>
+                <span class="click-hint">${isExp ? '▲ Masquer métriques' : '▼ Inspecter la latence'}</span>
+              </div>
+              
+              <div class="details" onclick="event.stopPropagation()">
+                ${s.maintenance ? `
+                  <div class="maint-banner">&#9888; INTERVENTION EN COURS SUR L'INFRASTRUCTURE</div>
+                ` : `
+                  <div class="stats">
+                    <div class="stat-box"><div class="stat-label">Uptime Global</div><div class="stat-val status-online">${s.uptimePercent}%</div></div>
+                    <div class="stat-box"><div class="stat-label">Latence Moyenne</div><div class="stat-val" style="color:var(--text);">${s.avgPing} ms</div></div>
+                  </div>
+                  <canvas id="cvs-${s.id}"></canvas>
+                `}
+              </div>
+            </div>
+          `;
+        }).join('');
+        
+        data.forEach(s => { if(expanded.has(s.id) && !s.maintenance) drawGraph(s.id, s.graphData); });
+      } catch (e) { console.error(e); }
+    }
+    fetchStatus(); setInterval(fetchStatus, 5000);
+  </script>
+  <script type="module" src="/assets/status.js"></script>
+</body>
+</html>
